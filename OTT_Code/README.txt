@@ -7,3 +7,5 @@ clustering: perl files for performing the main clustering stage of OTT.
 ott_objects_defs: python files holding main definitions of classes and functions used by OTT.
 ott_scripts: python/R/perl scripts used in our OTT flow.
 webServer_files: perl files handling web server parameters.
+
+KEREN WAS HERE
