@@ -19,15 +19,16 @@ require Exporter;
 
 ######### Consts ###########
 use constant SERVER_NAME 				=> "oneTwoTree";
-use constant RESULTS_DIR_ABSOLUTE_PATH 	=> "/bioseq/data/results/oneTwoTree";
+use constant RESULTS_DIR_ABSOLUTE_PATH 	=> "/onetwotree/results";
 use constant RESULTS_LINK 				=> "oneTwoTree_results";
+use constant SERVER_URL_EXT			=> "https://onetwotree.tau.ac.il/";
 use constant LOG_FILE 					=> "output.log";
 use constant ERROR_STATUS_LOG_FILE 		=> "error.OU";
 use constant OUTPUT_FILES_LIST 			=> "output_files.dat";
-use constant LOG_DIR_ABSOLUTE_PATH 		=> "/bioseq/data/results/oneTwoTree/logs/";
-use constant MAIN_PIPELINE_LOG 			=> "oneTwoTree.log";
+use constant LOG_DIR_ABSOLUTE_PATH 		=> "/onetwotree/results/logs/";
+use constant MAIN_PIPELINE_LOG 			=> "/onetwotree/site/oneTwoTree.log";
 #use constant PYTHON_MODULE_TO_LOAD 		=> 'python/python-3.3.0';
-use constant PYTHON_MODULE_TO_LOAD 		=> 'python/anaconda3-5.0.0';
+use constant PYTHON_MODULE_TO_LOAD 		=> 'python/python-3.6.7'; #'python/anaconda3-5.0.0';
 use constant PERL_MODULE_TO_LOAD 		=> 'perl/perl-5.16.3';
 use constant QSUB_JOB_NUM_FILE			=> "qsub_job_num.dat";
 use constant RESULTS_PAGE_URL			=> "/results.html";
@@ -35,8 +36,10 @@ use constant FILENAME_PARAMS_TXT		=> "params.txt";
 use constant FILENAME_PARAMS_HTML		=> "params.html";
 use constant FILENAME_LOCUS_TREENUM_TXT		=> "NumOfClusterTrees.txt";
 use constant FILENAME_EMAIL				=> "email.txt";
-
-
+use constant ONETWOTREE_INI			=> "OneTwoTree.ini";
+use constant ALIGN_SCRIPT			=> "buildTaxaTree.py";
+use constant ONETWOTREE_RUN_DIR 		=> "/onetwotree/site";
+use constant LOAD_MODULES		=>"module load python/python-anaconda3.6.5-michaldrori\nmodule load blast/blast230\nmodule load mrbayes/mrbayes_3.2.2\nmodule load Gblocks_0.91b\nmodule load R/3.5.1\nmodule load treePL-1\nmodule load pll-dppdiv-master\nmodule load gcc/gcc620\nmodule load mafft/mafft7149\nmodule load java/java-1.8\nexport LANG=aa_DJ.utf8\nmodule load raXML\nmodule load ExaML/examl-2018\nmodule load cdhit/cd-hit-4.7\nmodule load mpi/openmpi-1.10.4\nmodule load rocks-openmpi\nmodule load blastall\n";
 
 ######### Functions ############
 sub WriteToFile

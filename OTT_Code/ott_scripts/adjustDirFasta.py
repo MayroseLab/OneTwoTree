@@ -5,8 +5,8 @@ from Bio import SeqIO, Phylo
 import os
 import sys
 #from ott_objects_defs.ploidbCommon import getPropertyFromFastaSeqHeader, exec_external_command_redirect_output, write_standarize_fasta
-sys.path.insert(0, '/bioseq/oneTwoTree/ott_objects_defs')
-from ott_objects_defs.ploidbCommon import *
+sys.path.insert(0, '/onetwotree/site/ott_objects_defs/')
+from ploidbCommon import *
 
 """
  Given a list of fasta files, reverse all seqs in them if the direction is not the same for all seqs.

@@ -186,7 +186,7 @@ class PloiDbContext:
         self.name_resolve_results = os.path.join(working_dir, "resolved_names.csv")
         self.nr_analyze = os.path.join(working_dir, "NR_analyze.csv")
         self.subsp_variants_merge_names = os.path.join(working_dir, "subsp_var_merge_names.txt")
-        self.ploidb_db_file = os.path.join(working_dir, "../../ploidb-full.db")
+        self.ploidb_db_file = os.path.join(working_dir, "../ploidb-full.db") 
         self.fasta_seq_filename = os.path.join(working_dir, self.id + "-allseq" + ".fasta")
         self.fasta_cdhit_temp_input_f = os.path.join(working_dir, self.id + "_temp_input_cdhit" + ".fasta")
         self.fasta_cdhit_temp_output_f = os.path.join(working_dir, self.id + "_temp_output_cdhit" + ".fasta")

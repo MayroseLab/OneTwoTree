@@ -17,8 +17,8 @@ my $from = 'evolseq@tauex.tau.ac.il';
 
 my $subject;
 my $subject_fail = "Your OneTwoTree job $id $jobTitle has failed";
-my $final_status_file = "/bioseq/data/results/oneTwoTree/$id/SummaryDir/FinalStatus.txt";
-my $final_pass_file = "/bioseq/data/results/oneTwoTree/$id/JOB_PASS.txt";
+my $final_status_file = "/onetwotree/results/$id/SummaryDir/FinalStatus.txt";
+my $final_pass_file = "/onetwotree/results/$id/JOB_PASS.txt";
 
 my $resultsLink = "http://onetwotree.tau.ac.il/results.html?jobId=$id";
 my $message .= "Hello,\n\n";
@@ -42,36 +42,19 @@ if($jobTitle)
 }
 
 
-
-#my $message .= "Hello,\n\n".$subject. " at:\n";
 $message .= "$resultsLink\n\n";
-
-
 $message .= "Please note: the results will be kept on the server for one month.\n\n";
 $message .= "Thank you for using OneTwoTree,\n";
 $message .= "OneTwoTree Team\n";
 
- 
-#open(MAIL, "|/usr/sbin/sendmail -t");
-open(MAIL, "|/usr/sbin/sendmail -t") or die "can't open mail";
- 
-# Email Header
-print MAIL "To: $toEmail\n";
-print MAIL "From: $from\n";
-print MAIL "Subject: $subject\n\n";
+my $python_script = "/onetwotree/site/email_sender.py";
 
-# Email Body
-print MAIL $message;
-my $return_code = $? >> 8;
-print "print MAIL returned: $return_code\n";
-
-close(MAIL);
-#print "Email Sent Successfully to: $toEmail\n";
-
-#use Sys::Hostname;
-#$host = hostname;
-my $host = `hostname`;
-
-print "hostname: $host\n";
-
+my $cmd = "python $python_script mxout.tau.ac.il $from $toEmail --subject \"$subject\" --content \"$message\":";
+my $ans = `$cmd`;
+if ($ans eq "ok") {
+    print "Email Sent Successfully to: $toEmail\n";
+}
+else { 
+    print "Email to $toEmail Failed\n";
+}
 

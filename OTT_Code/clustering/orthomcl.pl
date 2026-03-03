@@ -77,13 +77,16 @@ my $empty_input = "yes";
 my $file_mcl_input = "$outDir/mclInput";
 #check if mclInput file is empty and create empty groups file:
 if(-z $file_mcl_input){
-	print("File mclInput at $outDir is empty, create empty groups file");
+	print("File mclInput at $outDir is empty, create empty groups file\n");
 	my $groups_empty_file = "$outDir/groups.txt";
     open my $fh,'>', $groups_empty_file or die "Can't open the groups file: $!";
 	close($fh);
-} else {
+} 
+else {
 	$empty_input = "no";
 }
+
+print ("\$empty_imput = $empty_input\n");
 
 if( $empty_input eq "yes"){
 
@@ -92,14 +95,18 @@ if( $empty_input eq "yes"){
 	my $onlyDesc = $outDir."_onlyDesc";
 	my $seqs = $outDir."_seqs";
 
+	print("calling perl -w $scriptsDir/getSequencesFromClusters.pl $outDir/groups.txt $seqs $fastaAllSequences $inputTaxaNum\n");
 	system "perl -w $scriptsDir/getSequencesFromClusters.pl $outDir/groups.txt $seqs $fastaAllSequences $inputTaxaNum"; #get the sequences
 
+	print("calling perl -w $scriptsDir/getOnlyDesc.pl $seqs $onlyDesc\n");
 	system "perl -w $scriptsDir/getOnlyDesc.pl $seqs $onlyDesc"; #get descriptions of each cluster
 
-	system "perl -w $scriptsDir/collapseCluster.pl $onlyDesc $gbFile $seqs $fastaAllSequences n"; #collapse the clusters
+	print("calling perl -w $scriptsDir/collapseCluster.pl $onlyDesc $gbFile $seqs $fastaAllSequences\n");
+	system "perl -w $scriptsDir/collapseCluster.pl $onlyDesc $gbFile $seqs $fastaAllSequences"; #collapse the clusters
 
+	print("perl -w $scriptsDir/appendClusters.pl $onlyDesc\n");
 	system "perl -w $scriptsDir/appendClusters.pl $onlyDesc"; #append the collapsed clusters to one file - easier to read
-	return
+	
 
 } else {
 
@@ -148,8 +155,12 @@ evalueExponentCutoff=-5
 oracleIndexTblSpc=NONE";
 
 	close(CONFIG4);
-    print "perl -w $orthomclBinDir/orthomclInstallSchema $outDir/config_step4 $outDir/log\n";
-	system "perl -w $orthomclBinDir/orthomclInstallSchema $outDir/config_step4 $outDir/log";
+	#print "perl -w $orthomclBinDir/orthomclInstallSchema $outDir/config_step4 $outDir/log\n";
+	#system "perl -w $orthomclBinDir/orthomclInstallSchema $outDir/config_step4 $outDir/log";
+	
+	my $cmd = "perl -w /a/home/cc/lifesci/onetwotree/orthomclInstallSchema.pl $outDir/config_step4 $outDir/log";
+	print "$cmd\n";
+	system $cmd;
 }
 
 #==============================================

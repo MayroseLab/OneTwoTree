@@ -59,7 +59,7 @@ def DB_getGBsequences(context, fasta_filename, gb_filename, nextTaxId):
 		logger.debug("No Data was fount in out Database, update your database and try again")
 		with open(context.final_status, 'w') as f_status:
 			f_status.write("No data found, update your genbank database")
-		return
+		return 0 # JS
 
 
 	#Insert data into csv file:
@@ -165,6 +165,7 @@ def DB_getGBsequences(context, fasta_filename, gb_filename, nextTaxId):
 	files = glob.glob(cd_Dir+'/*_ForCdHit.fasta')
 	logger.debug(len(files))
 	for Seq_file in files:
+		logger.info(f'DB_getGBsequences: copying {Seq_file} to {context.fasta_cdhit_temp_input_f}') 
 		shutil.copyfile(Seq_file,context.fasta_cdhit_temp_input_f)
 		#logger.info('Running CD-HIT on Taxid - %s' % nextTaxId)
 		with open(context.fasta_cdhit_temp_input_f, 'r') as cd_input_f:

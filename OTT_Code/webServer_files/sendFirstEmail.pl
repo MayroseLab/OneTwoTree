@@ -25,59 +25,19 @@ if($jobTitle)
 	$resultsLink .= "&jobTitle=$jobTitle";
 }
 
-
 my $message .= "Hello,\n\n".$subject. "\nA link to your job is available at:\n";
 $message .= "$resultsLink\n\n";
 
 $message .= "We will email you again when processing is finished.\n\n";
 $message .= "Thank you for using OneTwoTree\n";
-#$message .= "OneTwoTree Team\n";
 
- 
-#open(MAIL, "|/usr/sbin/sendmail -t");
-open(MAIL, "|/usr/sbin/sendmail -t") or die "can't open mail";
- 
-# Email Header
-print MAIL "To: $toEmail\n";
-print MAIL "From: $from\n";
-print MAIL "Subject: $subject\n\n";
+my $python_script = "/onetwotree/site/email_sender.py";
 
-# Email Body
-print MAIL $message;
-my $return_code = $? >> 8;
-print "print MAIL returned: $return_code\n";
-
-close(MAIL);
-#print "Email Sent Successfully to: $toEmail\n";
-
-#use Sys::Hostname;
-#$host = hostname;
-my $host = `hostname`;
-
-print "hostname: $host\n";
-
-
-
-###!/usr/bin/perl
-##use strict;
-##use warnings;
-##
-### first, create your message
-##use Email::MIME;
-##my $message = Email::MIME->create(
-##  header_str => [
-##    From    => 'evolseq@tauex.tau.ac.il',
-##    To      => 'michal.md75@gmail.com',
-##    Subject => 'Happy birthday!',
-##  ],
-##  attributes => {
-##    encoding => 'quoted-printable',
-##    charset  => 'ISO-8859-1',
-##  },
-##  body_str => "Happy birthday to you!\n",
-##);
-##
-### send the message
-##use Email::Sender::Simple qw(sendmail);
-##sendmail($message);
-##
+my $cmd = "python $python_script mxout.tau.ac.il $from $toEmail --subject \"$subject\" --content \"$message\":";
+my $ans = `$cmd`;
+if ($ans eq "ok") {
+    print "Email Sent Successfully to: $toEmail\n";
+}
+else { 
+    print "Email to $toEmail Failed\n";
+}

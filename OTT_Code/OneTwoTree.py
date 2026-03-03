@@ -1,7 +1,8 @@
 import sys
 
-ONE_TWO_TREE_PATH = '/bioseq/oneTwoTree/'
+ONE_TWO_TREE_PATH = '/onetwotree/site/'
 #ONE_TWO_TREE_PATH = '/groups/itay_mayrose/michaldrori/PROJECTS/OTT/OTT_V_1p2/'
+DAILY_TESTS_PATH = '/bioseq/bioSequence_scripts_and_constants/daily_tests'
 
 import os
 import csv
@@ -19,7 +20,7 @@ def create_job_file(job_name, command_align, email_start_cmd, email_end_cmd, fil
 		handle.write("#PBS -r y\n")
 		#handle.write("#PBS -q itaym\n")
 		handle.write("#PBS -q lifesciweb\n")
-		handle.write("#PBS -l select=1:ncpus=2:mem=1gb\n")
+		handle.write("#PBS -l select=1:ncpus=2:mem=3gb\n")
 		handle.write("#PBS -v PBS_O_SHELL=bash,PBS_ENVIRONMENT=PBS_BATCH\n")
 		handle.write("#PBS -e " + output_path + "\n")
 		handle.write("#PBS -o " + output_path + "\n")
@@ -47,7 +48,7 @@ def create_job_file(job_name, command_align, email_start_cmd, email_end_cmd, fil
 		handle.write("module load mpi/openmpi-1.10.4\n")
 		handle.write("module load rocks-openmpi\n")
 		handle.write("export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/opt/openmpi/lib\n")
-		handle.write("export PYTHONPATH=/bioseq/oneTwoTree\n")
+		handle.write("export PYTHONPATH=/onetwotree\n")
 		handle.write("module load rocks-openmpi\n")
 		
 		handle.write("hostname;\n")
@@ -67,7 +68,7 @@ def create_Spesific_job_file(job_name, command, file_name, error_files_path):
 		#handle.write("#PBS -j oe\n")
 		handle.write("#PBS -r y\n")
 		handle.write("#PBS -q lifesciweb\n")
-		handle.write("#PBS -l select=1:ncpus=2:mem=1gb\n")
+		handle.write("#PBS -l select=1:ncpus=2:mem=3gb\n")
 		handle.write("#PBS -v PBS_O_SHELL=bash,PBS_ENVIRONMENT=PBS_BATCH\n")
 		handle.write("#PBS -e " + error_files_path +" \n")
 		handle.write("#PBS -o " + error_files_path + "\n")
@@ -97,7 +98,7 @@ def create_Spesific_job_file(job_name, command, file_name, error_files_path):
 		handle.write("module load openmpi-x86_64\n")
 		handle.write("module load cdhit/cd-hit-4.7\n")
 		handle.write("export LD_LIBRARY_PATH ${LD_LIBRARY_PATH}:/opt/openmpi/lib\n")
-		handle.write("export PYTHONPATH=/bioseq/oneTwoTree\n")
+		handle.write("export PYTHONPATH=/onetwotree\n")
 		handle.write("hostname;\n")
 		handle.write(command + "\n")
 	return file_name
@@ -167,7 +168,7 @@ GenusDir = OUTPUT_OTT_PATH  + "/"
 FileNameAndPath = OUTPUT_OTT_PATH + "/OTT_" + JobName + ".sh"
 
 # send email at the end of the command:
-email_file = "/bioseq/data/results/oneTwoTree/"+JobName+"/email.txt"
+email_file = "/onetwotree/results/"+JobName+"/email.txt"
 if os.path.exists(email_file):
 	with open(email_file, 'r') as f_email:
 		first_line = f_email.readline()
@@ -179,9 +180,13 @@ if os.path.exists(email_file):
 				if 'jobTitle' in line:
 					line=line.strip()
 					jobTitle = line.split(':')[1]
-		#email_cmd = "perl /bioseq/oneTwoTree/sendLastEmail.pl --toEmail " + email_var + " --id " + JobName
-		email_start_cmd = "perl " + ONE_TWO_TREE_PATH + "webServer_files/sendFirstEmail.pl --toEmail " + email_var + " --id " + JobName + " --jobTitle " + '"' + jobTitle +'"'
-		email_end_cmd = "perl  " + ONE_TWO_TREE_PATH + "webServer_files/sendLastEmail.pl --toEmail " + email_var + " --id " + JobName + " --jobTitle " + '"' + jobTitle +'"'
+		if jobTitle != 'daily test': 
+			email_start_cmd = "perl " + ONE_TWO_TREE_PATH + "webServer_files/sendFirstEmail.pl --toEmail " + email_var + " --id " + JobName + " --jobTitle " + '"' + jobTitle +'"'
+			email_end_cmd = "perl  " + ONE_TWO_TREE_PATH + "webServer_files/sendLastEmail.pl --toEmail " + email_var + " --id " + JobName + " --jobTitle " + '"' + jobTitle +'"'
+		else:
+			email_start_cmd = ""
+			final_pass_file = os.path.join('/onetwotree/results/',JobName,'JOB_PASS.txt') 
+			email_end_cmd = f'python {ONE_TWO_TREE_PATH}webServer_files/write_daily_test.py {DAILY_TESTS_PATH} oneTwoTree \"http://onetwotree.tau.ac.il/results.html?jobId={JobName}&jobTitle={jobTitle.replace(" ", "%20")}\" {final_pass_file}'
 else:
 	email_start_cmd = ""
 	email_end_cmd = ""
@@ -191,7 +196,7 @@ os.chdir(OUTPUT_OTT_PATH + "/")
 #log_file_name = OUTPUT_OTT_PATH + 'OTT_log.txt'
 #f_log = open(log_file_name, "w")
 #f_log.write("---------------------------------------- START ---------------------------------------------------\n")
-os.system('qsub '+job_filename)
+#os.system('qsub '+job_filename)
 #f_log.write("---------------------------------------- END ---------------------------------------------------\n")
 #f_log.write (cmd)
 

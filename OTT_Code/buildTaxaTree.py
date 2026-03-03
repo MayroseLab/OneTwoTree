@@ -27,7 +27,7 @@ from ott_objects_defs.blastSequencesLocaly import *
 from ott_objects_defs.getGenusSequences import *
 from ott_objects_defs.ITS_usingDB import *
 
-from ott_scripts.Create_Tree import *  # Tree generation functions: part2_create_mrbayes_blk, create_mb_config_file
+from ott_scripts.Create_Tree import *  # Tree generation functions: part2_create_mrbayes_blk, create_mb_config_file 
 from ott_scripts.adjustDirFasta import adjust_direction_fasta_using_mafft
 
 
@@ -280,6 +280,23 @@ def Create_Tree(context,f_end_status_name):
 	Tree_Type = context.UserFlags_dict['Tree_Type'] #Concat or Per cluster/Locus
 	if Tree_Type == 'ConcatTree':
 		create_Tree_diffMethods(f_end_status_name, Tree_Method, context)
+		logger.info(f'called create_Tree_diffMethods')
+		
+		# root tree using MAD
+		finalTree = context.summary_dir + '/Result_Tree_' + context.id + '.tre'
+		rootTree_flag = False
+		if context.UserFlags_dict['Mad'] == '1' and os.path.exists(finalTree):
+			rootTree_flag = True
+		# fallback if automatic outgroup fails
+		if context.UserFlags_dict['Outgroup_Flag'] != 'None' and context.UserFlags_dict['Mad'] == '0':
+			if context.outgroupSelection == None:
+				rootTree_flag = True
+		if rootTree_flag:
+			logger.info(f'calling mad {finalTree}')
+			ans = rootTreeMad(finalTree)
+			if ans != 'OK':
+				statusFail_LogFile( context, ans)
+				
 	else:
 		#open dir for Trees in summary directory:
 		create_dir_if_not_exists(context.summary_dir+'/LocusTrees')
@@ -291,9 +308,26 @@ def Create_Tree(context,f_end_status_name):
 				ClusterID = str(current_context.index)
 				#Check if cluster was chosen for the concat file:
 				if current_context in context.cluster_contexts_for_concat_tree:
+				
 					#for cluster_id in clusters_list:
 					create_LocusTree_diffMethods(ClusterID, Tree_Method, context)
 					f_trees_ndexFile.write(ClusterID+',')
+					
+					# root tree using MAD
+					finalTree = context.summary_dir + '/LocusTrees/Result_Tree_' + context.id + f'_Cluster{ClusterID}.tre'
+					rootTree_flag = False
+					if context.UserFlags_dict['Mad'] == '1' and os.path.exists(finalTree):
+						rootTree_flag = True
+					# fallback if automatic outgroup fails
+					if context.UserFlags_dict['Outgroup_Flag'] != 'None' and context.UserFlags_dict['Mad'] == '0':
+						if context.outgroupSelection == None:
+							rootTree_flag = True
+					if rootTree_flag:
+						logger.info(f'calling mad {finalTree}')
+						ans = rootTreeMad(finalTree)
+						if ans != 'OK':
+							statusFail_LogFile( context, ans)
+							
 		#Create zip of all Locus trees:
 		LocusTrees_zipName = context.summary_dir + '/LocusTrees_' + context.id + '.zip'
 		logger.debug("Locus Trees zip file: %s" %LocusTrees_zipName)
@@ -632,16 +666,22 @@ def Build_raxml_Tree(Alignment_file, context, xml_model):
 				'raxml_' + context.id)
 	else:
 		genus_outgroup = context.outgroupSelection
+		
+		# JS solve problem in raxmlHPC
+		if genus_outgroup != None:
+			genus_outgroup_str = f'-o {genus_outgroup}'
+		else:
+			genus_outgroup_str = ''
+			
 		if context.UserFlags_dict['Use_BootS_RxOn'] == 'Off':
-			raxml_cmd = 'raxmlHPC -s %s -m %s -o %s -p 12345 -q %s -w %s -n %s' % (
-				Alignment_file, xml_model, genus_outgroup, context.concat_xml_partition_filename, context.xml_dir,
-				'raxml_' + context.id)
-		#raxml_cmd = 'raxmlHPC -m %s -o %s -p 12345 -q %s -s %s -n %s' % (xml_model,genus_outgroup,context.concat_xml_partition_filename,Alignment_file,'raxml_'+context.id)
+			#raxml_cmd = 'raxmlHPC -s %s -m %s -o %s -p 12345 -q %s -w %s -n %s' % (Alignment_file, xml_model, genus_outgroup, context.concat_xml_partition_filename, context.xml_dir, 'raxml_' + context.id)
+			raxml_cmd = 'raxmlHPC -s %s -m %s %s -p 12345 -q %s -w %s -n %s' % (Alignment_file, xml_model, genus_outgroup_str, context.concat_xml_partition_filename, context.xml_dir, 'raxml_' + context.id)
+			
+			#raxml_cmd = 'raxmlHPC -m %s -o %s -p 12345 -q %s -s %s -n %s' % (xml_model,genus_outgroup,context.concat_xml_partition_filename,Alignment_file,'raxml_'+context.id)
 		else:
 			bootstrap_val = str(context.UserFlags_dict['Raxml_BootS_vals'])
-			raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s -o %s -w %s -q %s -n %s -f a' % (
-				Alignment_file, bootstrap_val, xml_model, genus_outgroup, context.xml_dir,
-				context.concat_xml_partition_filename, 'raxml_' + context.id)
+			#raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s -o %s -w %s -q %s -n %s -f a' % (Alignment_file, bootstrap_val, xml_model, genus_outgroup, context.xml_dir, context.concat_xml_partition_filename, 'raxml_' + context.id)
+			raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s %s -w %s -q %s -n %s -f a' % (Alignment_file, bootstrap_val, xml_model, genus_outgroup_str, context.xml_dir, context.concat_xml_partition_filename, 'raxml_' + context.id)
 
 	if context.UserFlags_dict["Constraint_Flag"] == 'On':
 		raxml_cmd += (' -g %s' %(context.working_dir+'/ConstraintTree_user.txt'))
@@ -676,8 +716,15 @@ def Build_raxml_Boots_Tree(Alignment_file, context, xml_model,bootstrap_val,outg
 			'raxml_' + context.id)
 	else:
 		genus_outgroup = context.outgroupSelection
-		raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s -o %s -w %s -q %s -n %s -f a' % (
-			Alignment_file, bootstrap_val, xml_model, genus_outgroup, context.xml_dir,
+		
+		# JS solve problem in raxmlHPC
+		if genus_outgroup != None:
+			genus_outgroup_str = f'-o {genus_outgroup}'
+		else:
+			genus_outgroup_str = ''
+			
+		raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s %s -w %s -q %s -n %s -f a' % (
+			Alignment_file, bootstrap_val, xml_model, genus_outgroup_str, context.xml_dir,
 			context.concat_xml_partition_filename, 'raxml_' + context.id)
 
 	if context.UserFlags_dict["Constraint_Flag"] == 'On':
@@ -719,14 +766,20 @@ def Build_raxml_LocusTree(Alignment_file, context, xml_model, cluster_id):
 				Alignment_file, bootstrap_val, xml_model, Locus_dir, 'raxml_' + context.id)
 	else:
 		genus_outgroup = context.outgroupSelection
+		
+		if genus_outgroup != None:
+			genus_outgroup_str = f'-o {genus_outgroup}'
+		else:
+			genus_outgroup_str = ''
+			
 		if context.UserFlags_dict['Use_BootS_RxOn'] == 'Off':
-			raxml_cmd = 'raxmlHPC -s %s -m %s -o %s -p 12345 -w %s -n %s' % (
-				Alignment_file, xml_model, genus_outgroup, Locus_dir, 'raxml_' + context.id)
+			raxml_cmd = 'raxmlHPC -s %s -m %s %s -p 12345 -w %s -n %s' % (
+				Alignment_file, xml_model, genus_outgroup_str, Locus_dir, 'raxml_' + context.id)
 		#raxml_cmd = 'raxmlHPC -m %s -o %s -p 12345 -q %s -s %s -n %s' % (xml_model,genus_outgroup,context.concat_xml_partition_filename,Alignment_file,'raxml_'+context.id)
 		else:
 			bootstrap_val = str(context.UserFlags_dict['Raxml_BootS_vals'])
-			raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s -o %s -w %s -n %s -f a' % (
-				Alignment_file, bootstrap_val, xml_model, genus_outgroup, Locus_dir,'raxml_' + context.id)
+			raxml_cmd = 'raxmlHPC -s %s -x 12345 -p 12345 -N %s -m %s %s -w %s -n %s -f a' % (
+				Alignment_file, bootstrap_val, xml_model, genus_outgroup_str, Locus_dir,'raxml_' + context.id)
 
 	logger.debug("Execute Raxml: %s" % raxml_cmd)
 	os.chdir(Locus_dir)
@@ -767,7 +820,13 @@ def Build_examl_Tree(Alignment_file, context, xml_model):
 		raxml_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s -n %s' % (Alignment_file, 'RaxmlPreExaml_' + context.id)  #raxmlHPC -m GTRCAT -p 12345 -s your_alignment -n output_name -# 1
 	else:
 		genus_outgroup = context.outgroupSelection
-		raxml_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s -o %s -n %s' % (Alignment_file, genus_outgroup, 'RaxmlPreExaml_' + context.id)  #raxmlHPC -m GTRCAT -p 12345 -s your_alignment -n output_name -# 1
+		
+		if genus_outgroup != None:
+			genus_outgroup_str = f'-o {genus_outgroup}'
+		else:
+			genus_outgroup_str = ''
+			
+		raxml_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s %s -n %s' % (Alignment_file, genus_outgroup_str, 'RaxmlPreExaml_' + context.id)  #raxmlHPC -m GTRCAT -p 12345 -s your_alignment -n output_name -# 1
 
 	#Regular flow
 	logger.debug("Execute prerun for Examl: %s" % raxml_cmd)
@@ -880,7 +939,13 @@ def Build_examl_Boots_Tree(Alignment_file, context, xml_model,bootstrap_val,outg
 		raxml_reduced_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s -q %s -n pars' %(xml_align_file,xml_partition_file)
 	else:
 		genus_outgroup = context.outgroupSelection
-		raxml_reduced_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s -q %s -o %s -n pars' %(xml_align_file,xml_partition_file,genus_outgroup)
+		
+		if genus_outgroup != None:
+			genus_outgroup_str = f'-o {genus_outgroup}'
+		else:
+			genus_outgroup_str = ''
+			
+		raxml_reduced_cmd = 'raxmlHPC -y -m GTRCAT -p 12345 -s %s -q %s %s -n pars' %(xml_align_file,xml_partition_file,genus_outgroup_str)
 
 
 	os.system(raxml_reduced_cmd)
@@ -964,7 +1029,10 @@ def Build_examl_Boots_Tree(Alignment_file, context, xml_model,bootstrap_val,outg
 	os.chdir(context.xml_dir)
 	#exml_bootstrap_tree_cmd = 'raxmlHPC -f b -m %s -s phy_bin.binary -z TREESall -t %s -n Bootstrap_tree' % (xml_model,context.xml_dir+'/BS_0/ExaML_result.examlOut')
 	exml_bootstrap_tree_cmd = 'raxmlHPC -f b -m GTRGAMMA -s phy_bin.binary -z TREESall -t %s -n Bootstrap_tree' % (context.xml_dir+'/BS_0/ExaML_result.examlOut')
-	if (outgorup_flag != 'None'): exml_bootstrap_tree_cmd += ' -o %s' %context.outgroupSelection
+	if outgorup_flag != 'None': 
+		if context.outgroupSelection != None:
+			exml_bootstrap_tree_cmd += ' -o %s' %context.outgroupSelection
+
 	logger.debug("Execute raxml for Examl Final Bootstrap Tree: %s" % exml_bootstrap_tree_cmd)
 	os.system(exml_bootstrap_tree_cmd)
 
@@ -1041,6 +1109,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 	#This means all data for alignment is ready -> copy files to Summary dir:
 	#species_names_file.csv
 
+	logger.info(f' calling Build_MB_Tree ({str(f_end_status_name)}, {str(context)}, {str(nodeDateTxt)})')
 	outgrouup_selection = context.UserFlags_dict['Outgroup_Flag']
 	#Continue to Tree generation if AlignEnd_FinishedExecutionWithConcatFile exists:
 	concat_dir = context.working_dir + "/concat/"
@@ -1049,7 +1118,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 	#Check if tree file exists:
 	if os.path.exists(concat_dir + '/mb.out.con.tre'):
 		create_trees_allFormats(context, outgrouup_selection, concat_dir)
-		return
+		return 'success'
 	if (f_end_status_name == context.debug_dir + '/AlignEnd_FinishedExecutionWithConcatFile'):
 		fastaFilesList = (concat_dir + "fasta-files-to-concat.txt")
 		if os.path.exists(fastaFilesList):
@@ -1064,7 +1133,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 				"===========  Tree Generation Failed - missing file fasta-files-to-concat.txt  =========================")
 			logger.info(
 				"=======================================================================================================")
-			return
+			return 'fail'
 		if context.UserFlag_mbUserModel == 'None':
 			#Check periodicly if Jmodel was completed for all files and then run MBayes:
 			if (call_Check_Jmt_Done(JMTjobs_dirs_list) != 0):
@@ -1077,7 +1146,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 				logger.info(
 					"=======================================================================================================")
 				statusFail_LogFile(context, 'Polling Time for JmodelTest has expired')
-				return
+				return 'fail'
 		TreeFile = (context.working_dir + "/concat/mb.out.con.tre")
 		if os.path.exists(TreeFile):
 			logger.info("===========    Tree file exists at " + context.working_dir + " !!!   ===========")
@@ -1088,7 +1157,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 			if context.UserFlag_mbUserModel == 'None':  #Model will be set according to user selection and not JmodelTest:
 				if (part2_create_mrbayes_blk(genus, fastaFilesList)) == 1:
 					logger.debug("    ***   FAILED get_Nparams_ForModel !!!   *** ")
-					return
+					return 'fail'
 			#Node Dating params - in case we have the paragraph for the config file:
 			if nodeDateTxt != 'Empty':
 				mb_params_list = [context.UserFlags_dict['ngen'], context.UserFlags_dict['nchains'],
@@ -1142,8 +1211,9 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 						"===========  FAILED - No Outgroup selection !!!						       =========================")
 					logger.info(
 						"=======================================================================================================")
-					statusFail_LogFile(context, 'No Outgroup selection !!!')
-					return
+					#JS fallback to mad
+					#statusFail_LogFile(context, 'No Outgroup selection !!!')
+					return 'fail'
 				if genus_outgroup == 'FailedToRead_Outgroup':
 					logger.info(
 						"=======================================================================================================")
@@ -1152,7 +1222,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 					logger.info(
 						"=======================================================================================================")
 					statusFail_LogFile(context, 'FAILED to read outgroup file !!!')
-					return
+					return 'fail'
 			#job_filename = createJobFile.create_job_file(genus + "_MrBayes\n", mb_command, genus + "_MrBayes.sh", concat_dir)
 			mb_config_jobidFile = open(context.working_dir + "/concat/mb_JobID.txt", 'w')
 			logger.debug(mb_command)
@@ -1171,6 +1241,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 					"=======================================================================================================")
 			#with open(context.final_status,'a') as f_status:
 			#	f_status.write("PASS - Tree Created Successfully\n")
+				return 'success'
 			else:
 				logger.info(
 					"=======================================================================================================")
@@ -1181,7 +1252,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 				with open(context.final_status, 'w') as f_status:
 					f_status.write("MrBayes Tree generation FAILED, check input files and parameters")
 				shutil.copyfile(concat_dir + '/MB_LOG.txt', context.summary_dir + '/MB_LOG.txt')
-				return
+				return 'fail'
 		else:
 			logger.info(
 				"===========  \n\n" + genus + " No mb_config.nex file !!! check for errors   =========================")
@@ -1196,7 +1267,7 @@ def Build_MB_Tree(f_end_status_name, context, nodeDateTxt):
 			"=======================================================================================================")
 		with open(context.final_status, 'a') as f_status:
 			f_status.write("Alignment Failed - No tree generation\n")
-		return
+		return 'fail'
 
 
 #This function will take the clusters chosen by the user and create new alignment files:
@@ -1382,6 +1453,17 @@ def UpdateContextFlags(context):
 		flag_name = split_line[0]
 		flag_val = split_line[1].strip()  #split(' ')[0]
 		context.UserFlags_dict[flag_name] = flag_val
+		
+		if flag_name == 'Outgroup_Flag':
+			logger.debug("%s: %s" % (flag_name, flag_val))
+			
+			# JS case of Mad, Outgroup_Flag is None, 
+			if flag_val == 'Mad':
+				context.UserFlags_dict['Mad'] = '1'
+				context.UserFlags_dict['Outgroup_Flag'] = 'None'
+			else:
+				context.UserFlags_dict['Mad'] = '0'
+		
 		logger.debug("Flag: %s is: %s" % (flag_name, flag_val))
 
 	context.UserFlags_dict["ConstraintTree"] = 'None'
@@ -1402,7 +1484,17 @@ def UpdateContextFlags(context):
 			flag_val = split_line[1].strip()  #split(' ')[0]
 			if flag_name == 'Outgroup_Flag':
 				logger.debug("%s: %s" % (flag_name, flag_val))
-				context.UserFlags_dict['Outgroup_Flag'] = flag_val
+				
+				#context.UserFlags_dict['Outgroup_Flag'] = flag_val
+				
+				# JS case of Mad, Outgroup_Flag is None, 
+				if flag_val != 'Mad':
+					context.UserFlags_dict['Outgroup_Flag'] = flag_val
+					context.UserFlags_dict['Mad'] = '0'
+				else:
+					context.UserFlags_dict['Outgroup_Flag'] = 'None'
+					context.UserFlags_dict['Mad'] = '1'
+					
 			elif flag_name == 'Outgroup_User':
 				logger.debug("%s: %s" % (flag_name, flag_val))
 				context.UserFlags_dict['Outgroup_User'] = flag_val
@@ -1590,6 +1682,7 @@ def cluster_sequences_file_with_orthomcl(fasta_seq_filename, id, scripts_path, g
 			fasta_file_to_split = fasta_without_its
 			# This is for the ITS clusters
 			cluster_ITS(context, fasta_seq_filename, context.cluster_script_dir + "/clustering/", gb_seq_filename)
+			logger.info("After calling cluster_ITS")
 	#ITS is off:
 	else:
 		logger.info("ITS is OFF - will not cluster use specific ITS clustering")
@@ -1738,6 +1831,7 @@ def cluster_ITS(context, fasta_seq_filename, scripts_path, gb_seq_filename):
 	main_ITS_py(context, output_dir, fasta_only_its_filtered, gb_seq_filename, scripts_dir,
 								   args.config_filename, context.should_run_guidance,
 								   context.UserFlags_dict['MSA_Software'], "1")
+	logger.debug("After calling main_ITS_py")
 
 
 	for ITS_dir in context.its_cluster_list:
@@ -1808,6 +1902,7 @@ def create_orthomcl_scehma(genus_taxon_id):
 	db_user = ott_config['ott_mysql']['username']
 	db_password = ott_config['ott_mysql']['password']
 
+	logger.debug("Connecting to DB " + db_host)
 	db = mysql.connector.connect(host=db_host, user=db_user, password=db_password)
 
 	logger.debug("Connected to DB " + db_host)
@@ -1818,6 +1913,7 @@ def create_orthomcl_scehma(genus_taxon_id):
 		schema_name = get_schema_name_for_genus(genus_taxon_id)
 		logger.info("About to create DB %s" % schema_name)
 		cur.execute("CREATE DATABASE %s;" % schema_name)
+		logger.info("Created DB %s" % schema_name)
 	finally:
 		cur.close()
 		db.close()
@@ -1999,9 +2095,12 @@ def cluster_seqs(cluster_method, cluster_script_dir, id, context):
 
 			create_orthomcl_scehma(table_suffix)
 			try:
+				logger.info("calling cluster_sequences_file_with_orthomcl()")
 				cluster_sequences_file_with_orthomcl(fasta_seq_filename, table_suffix,
 													 cluster_script_dir + "/clustering/", gb_seq_filename,
 													 output_dir=context.clustering_dir, context=context)
+				logger.info("called cluster_sequences_file_with_orthomcl()")
+				
 			finally:
 				drop_orthomcl_scehma(table_suffix)
 	else:
@@ -2640,7 +2739,9 @@ def create_Tree_diffMethods(f_stat_check, Tree_Method, context):
 		+ final_tree + '"' + " output=" + '"' + final_tree_pdf + '"' + "' " + scripts_dir + "plot_pdf.R")
 		logger.debug("R script to create pdf file: %s" %createPdfTree_Rcmd)
 		exec_external_command_redirect_output(createPdfTree_Rcmd)
+		logger.debug("Executed R script")
 		create_summary_zip(context)
+		logger.debug("created summary zip")
 		#Completed the flow - Passed all
 		with open(context.final_status, 'w') as f_status:
 			f_status.write("PASS - Tree Created Successfully")
@@ -2652,7 +2753,44 @@ def create_Tree_diffMethods(f_stat_check, Tree_Method, context):
 
 	return
 
+def rootTreeMad(path):
 
+	#folder, file = os.path.split(path)
+	path_orig = path.replace('.tre', '_orig.tre')
+	path_fixed = path.replace('.tre', '_fixed.tre')
+	shutil.move (path, path_orig)
+	
+	# remove :0.0 at end of tree
+	try: 
+		with open (path_orig, "r") as f_in:
+			try:
+				with open (path_fixed, "w") as f_out:
+					tree = f_in.read()
+					tree = re.sub(':0.0[;?]$', ';', tree)
+					f_out.write (tree)
+					f_out.close()
+				f_in.close()
+			except:
+				return f'failed to open {path_fixed} for writing'
+	except:
+		return f'failed to open {path_orig} for reading'
+		
+	mad_prog = '/groups/itay_mayrose/danaazouri/privatemodules/mad/mad'
+	cmd = f'{mad_prog} {path_fixed}'
+	
+	try: 
+		exec_external_command_redirect_output(cmd)
+	except:
+		return 'failed to run mad program'
+	
+	logger.debug("completed Mad program")
+	
+	rooted_path = f'{path_fixed}.rooted'
+	if os.path.exists(rooted_path):
+		shutil.move (f'{path_fixed}.rooted', path)
+		return 'OK'
+	else:
+		return "Tree was not rooted by Mad, please send us your job number for more details"
 
 # ------------------------------------------------------------------------------------------------------------------------------------------------------------
 #
@@ -2693,6 +2831,7 @@ def generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename,
 	create_dir_if_not_exists(context.summary_dir)
 	create_dir_if_not_exists(context.debug_dir)
 	UpdateContextFlags(context)
+	logger.debug(f'keys in context.UserFlags_dict: {context.UserFlags_dict.keys()}')
 	context.should_run_guidance = context.UserFlags_dict['FilterMSA_Method']
 	open(context.summary_file, 'w')
 	outgrouup_selection = context.UserFlags_dict['Outgroup_Flag']
@@ -2898,6 +3037,7 @@ def generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename,
 						   gb_filename=context.gb_seq_filename, p=p)
 	logger.info("DONE Getting sequences data for taxa")
 	logger.info("Remove cd-hit directory")
+	# JOSEF commented out
 	if os.path.exists(context.working_dir + '/CD_Hit_dir'):
 		shutil.rmtree(context.working_dir + '/CD_Hit_dir')
 
@@ -3075,7 +3215,8 @@ def generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename,
 
 	# MD: This check was moved here so it will perform the min species per cluster after the large species were added:
 	if not verify_cluster_data_is_enough(context):
-		statusFail_LogFile(context, 'Less than 5 taxa were selected for each cluster.')
+		min_species_in_cluster = int(ott_config['general']['min_species_in_cluster'])
+		statusFail_LogFile(context, f'Less than {min_species_in_cluster} taxa were selected for each cluster.')
 		return
 
 	#Copy to Summary Directory:
@@ -3181,6 +3322,7 @@ def generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename,
 
 	#Build_MB_Tree(f_end_status_name,context)
 	Create_Tree(context,f_end_status_name)
+	logger.info("called Create_Tree")
 
 
 if __name__ == "__main__":
@@ -3240,15 +3382,14 @@ if __name__ == "__main__":
 		shutil.copyfile(args.params_path, working_dir + '/params.txt')
 		logger.debug("User params file : %s" % args.params_path)
 
-	#try:
-	generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename, cluster_method, should_ignore_subsp,
-						   should_merge_subsp)
+	try:
+		generate_taxa_tree(id, taxa_list, working_dir, log_filename, debug_filename, cluster_method, should_ignore_subsp,should_merge_subsp)
 
-	#except: # catch *all* exceptions
-	#	create_dir_if_not_exists(working_dir + '/SummaryDir')
-	#	logger.debug("Exception error on generate_taxa_tree!!!!")
-	#	with open(working_dir + '/SummaryDir/FianlStatus.txt','w') as sum_Status_f:
-	#		sum_Status_f.write("OTT ERROR. Please contact us with your job ID number")
+	except: # catch *all* exceptions
+		create_dir_if_not_exists(working_dir + '/SummaryDir')
+		logger.debug("Exception error on generate_taxa_tree!!!!")
+		with open(working_dir + '/SummaryDir/FinalStatus.txt','w') as sum_Status_f:
+			sum_Status_f.write("OTT ERROR. Please contact us with your job ID number")
 
 	#running time calc:
 	total_time_min = (time.time() - start_time) / 60

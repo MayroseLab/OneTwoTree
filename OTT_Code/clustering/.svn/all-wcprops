@@ -1,0 +1,113 @@
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering
+END
+filterBlastResultsByLength.py
+K 25
+svn:wc:ra_dav:version-url
+V 121
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/filterBlastResultsByLength.py
+END
+orthomclFilterFasta.pl
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/orthomclFilterFasta.pl
+END
+SplitFastaSeqsBySpecies.pl
+K 25
+svn:wc:ra_dav:version-url
+V 118
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/SplitFastaSeqsBySpecies.pl
+END
+getSeqsWithoutITS.pl
+K 25
+svn:wc:ra_dav:version-url
+V 112
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/getSeqsWithoutITS.pl
+END
+getOnlyDesc.pl
+K 25
+svn:wc:ra_dav:version-url
+V 106
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/getOnlyDesc.pl
+END
+Guidance.pm
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/Guidance.pm
+END
+orthomclAdjustFasta.pl
+K 25
+svn:wc:ra_dav:version-url
+V 114
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/orthomclAdjustFasta.pl
+END
+orthomclPairs.pl
+K 25
+svn:wc:ra_dav:version-url
+V 108
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/orthomclPairs.pl
+END
+orthomcl.pl
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/orthomcl.pl
+END
+getSeqsWithITS.pl
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/getSeqsWithITS.pl
+END
+adjustdir.sh
+K 25
+svn:wc:ra_dav:version-url
+V 104
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/adjustdir.sh
+END
+OneSeq.pm
+K 25
+svn:wc:ra_dav:version-url
+V 101
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/OneSeq.pm
+END
+appendClusters.pl
+K 25
+svn:wc:ra_dav:version-url
+V 109
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/appendClusters.pl
+END
+orthomclDumpPairsFiles.pl
+K 25
+svn:wc:ra_dav:version-url
+V 117
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/orthomclDumpPairsFiles.pl
+END
+ITS.pm
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/ITS.pm
+END
+mainITS.pl
+K 25
+svn:wc:ra_dav:version-url
+V 102
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/mainITS.pl
+END
+getSequencesFromClusters.pl
+K 25
+svn:wc:ra_dav:version-url
+V 119
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/getSequencesFromClusters.pl
+END
+collapseCluster.pl
+K 25
+svn:wc:ra_dav:version-url
+V 110
+/pupkoSVN/!svn/ver/15105/trunk/scripts/mayrose_lab/Michal/Ploidb_CODE/OneTwoTree/clustering/collapseCluster.pl
+END
